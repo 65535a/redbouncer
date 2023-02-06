@@ -70,7 +70,8 @@ if __name__ == "__main__":
     port = int(args.port)
     cert = str(args.cert)
     key = str(args.key)
-    target = 'http://localhost:8000'
+    target = str(args.target)
+    droptarget = str(args.droptarget)
 
     app = create_app()
     app.run(host="0.0.0.0", port=port, ssl_context=(cert, key))
