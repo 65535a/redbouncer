@@ -2,7 +2,7 @@ Quick instructions:
 - Install dependencies
 - Add your Badger's http headers into the headers.txt file in json format (the key must start with CAPITAL letter)
 - Generate an SSL key and a cert or use existing ones
-- Run the main.py with suitable parameters (-h is your friend)
+- Run the main.py with suitable arguments (-h is your friend)
 
 Requests from new IPs without proper headers are added straight into blacklist.txt which the script checks first during request handling. Requests from IPs which are found in whitelist.txt are proxied without the header check. If a request has valid headers, the IP is added to whitelist.txt.
 
@@ -11,5 +11,5 @@ To-do:
 - Implement proper logging
 - Make forced SSL optional
 - Make header handling case insensitive
-- Handle black/whitelist in memory to reduce per-request disk operations
+- Handle black/whitelist in memory to avoid per-request disk operations
 - Add X-Forwarded-For header to proxied requests to preserve originating IP
