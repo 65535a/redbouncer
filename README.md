@@ -13,3 +13,4 @@ To-do:
 - Make header handling case insensitive
 - Handle black/whitelist in memory to avoid per-request disk operations
 - Add X-Forwarded-For header to proxied requests to preserve originating IP
+- Mute SSL warings while forced
