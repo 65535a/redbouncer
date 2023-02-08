@@ -1,15 +1,18 @@
-mport os
+import os
 import argparse
 import requests
 from flask import Flask, request, redirect
 import ast
 
+requests.packages.urllib3.disable_warnings() 
+
 target = ""
 droptarget = ""
 URI = ""
+app = Flask(__name__)
 
 def create_app(config=None):
-    app = Flask(__name__)
+    #app = Flask(__name__)
     app.config.update(dict(DEBUG=False))
     app.config.update(config or {})
 
@@ -23,7 +26,6 @@ def create_app(config=None):
     def bouncer():
         ip = request.remote_addr
         headers = dict(request.headers)
-
         with open('blacklist.txt', 'r+') as blacklist:
             if ip in blacklist.read():
                 return redirect(droptarget)
@@ -61,9 +63,9 @@ def forward(method, headers, data):
 
 if __name__ == "__main__":    
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--port", action="store", default="8000")
-    parser.add_argument("-c", "--cert", action="store", default="./cert.pem")
-    parser.add_argument("-k", "--key", action="store", default="./key.pem")
+    parser.add_argument("-p", "--port", action="store", required=False)
+    parser.add_argument("-c", "--cert", action="store", required=False)
+    parser.add_argument("-k", "--key", action="store", required=False)
     parser.add_argument("-t", "--target", action="store", default="http://127.0.0.1:8000")
     parser.add_argument("-d", "--droptarget", action="store", default="https://google.com")
     parser.add_argument("-u", "--URI", action="store", default="")
@@ -77,4 +79,7 @@ if __name__ == "__main__":
     URI = str(args.URI)
 
     app = create_app()
-    app.run(host="0.0.0.0", port=port, ssl_context=(cert, key))
+    if port == 443:
+        app.run(host="0.0.0.0", port=port, ssl_context=(cert, key))
+    else:
+        app.run(host="0.0.0.0", port=port)
