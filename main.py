@@ -1,4 +1,4 @@
-import os
+mport os
 import argparse
 import requests
 from flask import Flask, request, redirect
@@ -6,10 +6,11 @@ import ast
 
 target = ""
 droptarget = ""
+URI = ""
 
 def create_app(config=None):
     app = Flask(__name__)
-    app.config.update(dict(DEBUG=True))
+    app.config.update(dict(DEBUG=False))
     app.config.update(config or {})
 
     required_headers = {}
@@ -18,7 +19,7 @@ def create_app(config=None):
         data = f.read()
         required_headers = ast.literal_eval(data)
 
-    @app.route("/", methods = ['GET', 'POST'])
+    @app.route("/"+URI, methods = ['GET', 'POST'])
     def bouncer():
         ip = request.remote_addr
         headers = dict(request.headers)
@@ -49,10 +50,10 @@ def create_app(config=None):
 def forward(method, headers, data):
 
     if method == 'GET':
-        r = requests.get(target, headers=headers)
+        r = requests.get(target, headers=headers, verify=False)
         return r.text
     elif method == 'POST':
-        r = requests.post(target, headers=headers, data=data)
+        r = requests.post(target, headers=headers, data=data, verify=False)
         return r.text
     else:
         return "Bad request", 400
@@ -65,6 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("-k", "--key", action="store", default="./key.pem")
     parser.add_argument("-t", "--target", action="store", default="http://127.0.0.1:8000")
     parser.add_argument("-d", "--droptarget", action="store", default="https://google.com")
+    parser.add_argument("-u", "--URI", action="store", default="")
 
     args = parser.parse_args()
     port = int(args.port)
@@ -72,6 +74,7 @@ if __name__ == "__main__":
     key = str(args.key)
     target = str(args.target)
     droptarget = str(args.droptarget)
+    URI = str(args.URI)
 
     app = create_app()
     app.run(host="0.0.0.0", port=port, ssl_context=(cert, key))
