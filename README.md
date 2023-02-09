@@ -7,7 +7,7 @@ Quick instructions:
 Requests from new IPs without proper headers are added straight into blacklist.txt which the script checks first during request handling. Requests from IPs which are found in whitelist.txt are proxied without the header check. If a request has valid headers, the IP is added to whitelist.txt.
 
 To-do:
-- Fix the bug which causes application to stop responding to new connections (probably caused by TCP socket exhaustion or something)
+- Fix the bug which causes application to crash
 - Make a proper help message and documentation
 - Implement proper logging
 - Make forced SSL optional
