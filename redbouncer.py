@@ -3,6 +3,7 @@ import argparse
 import requests
 from flask import Flask, request, redirect
 import ast
+import threading
 
 requests.packages.urllib3.disable_warnings() 
 
@@ -11,8 +12,10 @@ droptarget = ""
 URI = ""
 app = Flask(__name__)
 
+blacklistList = []
+whitelistList = []
+
 def create_app(config=None):
-    #app = Flask(__name__)
     app.config.update(dict(DEBUG=False))
     app.config.update(config or {})
 
@@ -26,22 +29,22 @@ def create_app(config=None):
     def bouncer():
         ip = request.remote_addr
         headers = dict(request.headers)
-        with open('blacklist.txt', 'r+') as blacklist:
-            if ip in blacklist.read():
-                return redirect(droptarget)
+        
+        if ip in blacklistList:
+            return redirect(droptarget)
 
-        with open('whitelist.txt', 'r+') as whitelist:
-            if ip in whitelist.read():
-                if request.method == 'GET':
-                    return forward(request.method, request.headers, None) 
-                elif request.method == 'POST':
-                    return forward(request.method, request.headers, request.data.decode('UTF-8'))          
-            elif required_headers.items() <= headers.items():
+        if ip in whitelistList:
+            if request.method == 'GET':
+                return forward(request.method, headers, None, ip) 
+            elif request.method == 'POST':
+                return forward(request.method, headers, request.data.decode('UTF-8'), ip)          
+        elif required_headers.items() <= headers.items():
+            with open('whitelist.txt', 'r+') as whitelist:
                 whitelist.write(ip+'\n')
-                if request.method == 'GET':
-                    return forward(request.method, request.headers, None) 
-                elif request.method == 'POST':
-                    return forward(request.method, request.headers, request.data.decode('UTF-8'))
+            if request.method == 'GET':
+                return forward(request.method, headers, None, ip) 
+            elif request.method == 'POST':
+                return forward(request.method, headers, request.data.decode('UTF-8'), ip)
         
         with open('blacklist.txt', 'r+') as blacklist:
             blacklist.write(ip+'\n')
@@ -49,8 +52,9 @@ def create_app(config=None):
 
     return app
 
-def forward(method, headers, data):
 
+def forward(method, headers, data, og_ip):
+    headers['X-Forwarded-For'] = og_ip
     if method == 'GET':
         r = requests.get(target, headers=headers, verify=False)
         return r.text
@@ -60,6 +64,18 @@ def forward(method, headers, data):
     else:
         return "Bad request", 400
 
+
+def updateLists():
+    threading.Timer(1.0, updateLists).start()
+    blacklistList.clear()
+    with open('blacklist.txt', 'r') as blacklist:
+        for line in blacklist:
+            blacklistList.append(line.replace("\n", ""))
+    whitelistList.clear()
+    with open('whitelist.txt', 'r') as whitelist:
+        for line in whitelist:
+            whitelistList.append(line.replace("\n", ""))
+            
 
 if __name__ == "__main__":    
     parser = argparse.ArgumentParser()
@@ -77,6 +93,8 @@ if __name__ == "__main__":
     target = str(args.target)
     droptarget = str(args.droptarget)
     URI = str(args.URI)
+
+    updateLists()
 
     app = create_app()
     if port == 443:
