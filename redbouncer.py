@@ -3,8 +3,7 @@ import argparse
 import requests
 from flask import Flask, request, redirect
 import ast
-from logging.config import dictConfig
-
+import logging
 
 requests.packages.urllib3.disable_warnings() 
 
@@ -13,36 +12,13 @@ droptarget = ""
 URI = ""
 app = Flask(__name__)
 
+event_logger = logging.getLogger('event_logger')
+event_log_handler = logging.FileHandler('events.log')
+event_logger.addHandler(event_log_handler)
+event_logger.setLevel(logging.INFO)
 
 blacklist = []
 whitelist = []
-
-dictConfig(
-    {
-        "version": 1,
-        "formatters": {
-            "default": {
-                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-            }
-        },
-        "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
-                "formatter": "default",
-            }, 
-
-            "file": {
-                "class": "logging.FileHandler",
-                "filename": "redbouncer.log",
-                "formatter": "default",
-            },
-
-        },
-        "root": {"level": "DEBUG", "handlers": ["console", "file"]},
-    }
-)
-
 
 
 def create_app(config=None):
@@ -76,14 +52,14 @@ def create_app(config=None):
                 return forward(request.method, headers, request.data.decode('UTF-8'), ip)          
         elif required_headers.items() <= headers.items():
             whitelist.append(ip)
-            app.logger.info(ip + " added into whitelist.")
+            event_logger.info(ip + " added into whitelist.")
             if request.method == 'GET':
                 return forward(request.method, headers, None, ip) 
             elif request.method == 'POST':
                 return forward(request.method, headers, request.data.decode('UTF-8'), ip)
         
         blacklist.append(ip)
-        app.logger.info(ip + " added into blacklist.")
+        event_logger.info(ip + " added into blacklist.")
         return redirect(droptarget)
 
     return app
