@@ -7,6 +7,7 @@ import logging
 
 requests.packages.urllib3.disable_warnings() 
 
+instance = ""
 target = ""
 droptarget = ""
 URI = ""
@@ -52,14 +53,14 @@ def create_app(config=None):
                 return forward(request.method, headers, request.data.decode('UTF-8'), ip)          
         elif required_headers.items() <= headers.items():
             whitelist.append(ip)
-            event_logger.info(ip + " added into whitelist.")
+            event_logger.info("EVENT from" + instance + ": Request from " + ip + " with correct headers. Added into whitelist.")
             if request.method == 'GET':
                 return forward(request.method, headers, None, ip) 
             elif request.method == 'POST':
                 return forward(request.method, headers, request.data.decode('UTF-8'), ip)
         
         blacklist.append(ip)
-        event_logger.info(ip + " added into blacklist.")
+        event_logger.info("EVENT from" + instance + ": Request from " + ip + " with wrong headers. Added into blacklist.")
         return redirect(droptarget)
 
     return app
@@ -84,6 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--target", action="store", default="http://127.0.0.1:8000")
     parser.add_argument("-d", "--droptarget", action="store", default="https://google.com")
     parser.add_argument("-u", "--URI", action="store", default="")
+    parser.add_argument("-i", "--instance", action="store", default="forwarder")
 
     args = parser.parse_args()
     port = int(args.port)
@@ -92,6 +94,7 @@ if __name__ == "__main__":
     target = str(args.target)
     droptarget = str(args.droptarget)
     URI = str(args.URI)
+    instance = str(args.instance)
 
     app = create_app()
     if port == 443:
