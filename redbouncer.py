@@ -53,14 +53,14 @@ def create_app(config=None):
                 return forward(request.method, headers, request.data.decode('UTF-8'), ip)          
         elif required_headers.items() <= headers.items():
             whitelist.append(ip)
-            event_logger.info("EVENT from" + instance + ": Request from " + ip + " with correct headers. Added into whitelist.")
+            event_logger.info("EVENT from " + instance + ": Request from " + ip + " with correct headers. Added into whitelist.")
             if request.method == 'GET':
                 return forward(request.method, headers, None, ip) 
             elif request.method == 'POST':
                 return forward(request.method, headers, request.data.decode('UTF-8'), ip)
         
         blacklist.append(ip)
-        event_logger.info("EVENT from" + instance + ": Request from " + ip + " with wrong headers. Added into blacklist.")
+        event_logger.info("EVENT from " + instance + ": Request from " + ip + " with wrong headers. Added into blacklist.")
         return redirect(droptarget)
 
     return app
